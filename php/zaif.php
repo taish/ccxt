@@ -65,6 +65,16 @@ class zaif extends Exchange {
                         'cancelInvoice',
                     ),
                 ),
+                'tlapi' => array (
+                    'post' => array (
+                        'get_positions',
+                        'position_history',
+                        'active_positions',
+                        'create_position',
+                        'change_position',
+                        'cancel_position',
+                    ),
+                ),
             ),
         ));
     }
@@ -300,12 +310,27 @@ class zaif extends Exchange {
         if ($api == 'public') {
             $url .= 'api/' . $this->version . '/' . $this->implode_params($path, $params);
         } else {
-            $url .= ($api == 'ecapi') ? 'ecapi' : 'tapi';
             $nonce = $this->nonce ();
-            $body = $this->urlencode (array_merge (array (
-                'method' => $path,
-                'nonce' => $nonce,
-            ), $params));
+            if ($api == 'ecapi') {
+              $url .= 'ecapi'
+              $body = $this->urlencode (array_merge (array (
+                  'method' => $path,
+                  'nonce' => $nonce,
+              ), $params));
+            } else if ($api == 'tlapi') {
+              $url .= 'tlapi'
+              $body = $this->urlencode (array_merge (array (
+                  'method' => $path,
+                  'type' => 'margin',
+                  'nonce' => $nonce,
+              ), $params));
+            } else {
+              $url .= 'tapi'
+              $body = $this->urlencode (array_merge (array (
+                  'method' => $path,
+                  'nonce' => $nonce,
+              ), $params));
+            }
             $headers = array (
                 'Content-Type' => 'application/x-www-form-urlencoded',
                 'Key' => $this->apiKey,
